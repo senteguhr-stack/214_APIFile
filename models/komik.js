@@ -1,45 +1,44 @@
 module.exports = (sequelize, DataTypes) => {
-    const komik = sequelize.define("Komik", {
+    const Komik = sequelize.define("Komik", {
         id: {
             type: DataTypes.INTEGER,
-            primaryKey: true,
             autoIncrement: true,
+            primaryKey: true
         },
         judul: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
         },
         sinopsis: {
             type: DataTypes.TEXT,
-            allowNull: false,
+            allowNull: true
         },
         tahun_terbit: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true
         },
         penulis_id: {
             type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        genre_id: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
+            allowNull: false
+        }
     }, {
         tableName: 'komik',
-        timestamps: false,
+        timestamps: false
     });
 
-    komik.associate = (models) => {
-        komik.belongsTo(models.Penulis, {
+    Komik.associate = (models) => {
+        Komik.belongsTo(models.Penulis, {
             foreignKey: 'penulis_id',
-            as: 'penulis',
+            as: 'penulis'
         });
 
-        komik.belongsToMany(models.Genre, {
-            foreignKey: 'genre_id',
-            through: 'komik_id',
-            as: 'genre',
+        Komik.belongsToMany(models.Genre, {
+            through: 'KomikGenre',
+            foreignKey: 'komik_id',
+            otherKey: 'genre_id',
+            as: 'genre'
         });
-    }
+    };
+
+    return Komik; // WAJIB ADA: Biar gak undefined
 };

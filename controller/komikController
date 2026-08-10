@@ -1,93 +1,191 @@
-const { Komik } = require('../models');
+const db = require("../models");
 
-// GET all komik
-async function getAllKomik(req, res) {
-    try {
-        const komik = await Komik.findAll();
-        res.status(200).json(komik);
-    } catch (err) {
-        console.error('Error fetching komik:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}
+const Komik = db.Komik;
+const Penulis = db.Penulis;
+const Genre = db.Genre;
 
-// GET komik by ID
-async function getKomikById(req, res) {
-    const { id } = req.params;
-    try {
-        const komik = await Komik.findByPk(id);
-        if (!komik) {
-            return res.status(404).json({ error: 'Komik not found' });
+async function getAll(req, res) {
+  try {
+    const komik = await Komik.findAll({
+      include: [
+        {
+          model: Penulis,
+          as: "penulis",
+          attributes: ["id", "nama", "email"]
+        },
+        {
+          model: Genre,
+          as: "genre",
+          through: {
+            attributes: []
+          }
         }
-        res.status(200).json(komik);
-    } catch (err) {
-        console.error('Error fetching komik by ID:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
+      ]
+    });
+
+    return res.status(200).json(komik);
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
 }
 
-// CREATE new komik
-async function createKomik(req, res) {
-    const { title, description, author } = req.body;
+async function create(req, res) {
+  try {
+    const {
+      judul,
+      sinopsis,
+      tahun_terbit,
+      penulis_id,
+      genre_ids
+    } = req.body;
 
-    if (!title) {
-        return res.status(400).json({ error: 'Title is required' });
+    const penulis = await Penulis.findByPk(penulis_id);
+    if (!penulis) {
+      return res.status(404).json({
+        message: "Penulis tidak ditemukan."
+      });
     }
 
-    try {
-        const newKomik = await Komik.create({ title, description, author });
-        res.status(201).json(newKomik);
-    } catch (err) {
-        console.error('Error creating komik:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}
+    const komik = await Komik.create({
+      judul,
+      sinopsis,
+      tahun_terbit,
+      penulis_id
+    });
 
-// UPDATE komik
-async function updateKomik(req, res) {
-    const { id } = req.params;
-    const { title, description, author } = req.body;
-
-    try {
-        const komik = await Komik.findByPk(id);
-        if (!komik) {
-            return res.status(404).json({ error: 'Komik not found' });
+    if (genre_ids && genre_ids.length > 0) {
+      const genres = await Genre.findAll({
+        where: {
+          id: genre_ids
         }
+      });
 
-        await komik.update({
-            title: title ?? komik.title,
-            description: description ?? komik.description,
-            author: author ?? komik.author
-        });
-
-        res.status(200).json(komik);
-    } catch (err) {
-        console.error('Error updating komik:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
+      await komik.setGenre(genres);
     }
+
+    const result = await Komik.findByPk(komik.id, {
+      include: [
+        {
+          model: Penulis,
+          as: "penulis"
+        },
+        {
+          model: Genre,
+          as: "genre",
+          through: {
+            attributes: []
+          }
+        }
+      ]
+    });
+
+    return res.status(201).json({
+      message: "Komik berhasil ditambahkan.",
+      data: result
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
 }
 
-// DELETE komik
-async function deleteKomik(req, res) {
+async function update(req, res) {
+  try {
     const { id } = req.params;
-    try {
-        const komik = await Komik.findByPk(id);
-        if (!komik) {
-            return res.status(404).json({ error: 'Komik not found' });
-        }
 
-        await komik.destroy();
-        res.status(200).json({ message: 'Komik deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting komik:', err.message);
-        res.status(500).json({ error: 'Internal server error' });
+    const {
+      judul,
+      sinopsis,
+      tahun_terbit,
+      penulis_id,
+      genre_ids
+    } = req.body;
+
+    const komik = await Komik.findByPk(id);
+
+    if (!komik) {
+      return res.status(404).json({
+        message: "Komik tidak ditemukan."
+      });
     }
+
+    await komik.update({
+      judul,
+      sinopsis,
+      tahun_terbit,
+      penulis_id
+    });
+
+    if (genre_ids) {
+      const genres = await Genre.findAll({
+        where: {
+          id: genre_ids
+        }
+      });
+
+      await komik.setGenre(genres);
+    }
+
+    const result = await Komik.findByPk(id, {
+      include: [
+        {
+          model: Penulis,
+          as: "penulis"
+        },
+        {
+          model: Genre,
+          as: "genre",
+          through: {
+            attributes: []
+          }
+        }
+      ]
+    });
+
+    return res.status(200).json({
+      message: "Komik berhasil diperbarui.",
+      data: result
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+}
+
+async function remove(req, res) {
+  try {
+    const { id } = req.params;
+
+    const komik = await Komik.findByPk(id);
+
+    if (!komik) {
+      return res.status(404).json({
+        message: "Komik tidak ditemukan."
+      });
+    }
+
+    await komik.destroy();
+
+    return res.status(200).json({
+      message: "Komik berhasil dihapus."
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
 }
 
 module.exports = {
-    getAllKomik,
-    getKomikById,
-    createKomik,
-    updateKomik,
-    deleteKomik
+  getAll,
+  create,
+  update,
+  remove
 };

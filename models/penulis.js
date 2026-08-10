@@ -1,34 +1,34 @@
 module.exports = (sequelize, DataTypes) => {
-    const Penulis = sequelize.define('Penulis', {
+    const Penulis = sequelize.define("Penulis", {
         id: {
             type: DataTypes.INTEGER,
-            primaryKey: true,
             autoIncrement: true,
+            primaryKey: true
         },
         nama: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: false
         },
         email: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
+            unique: true
         },
         password: {
             type: DataTypes.STRING,
-            allowNull: false,
-        },
+            allowNull: false
+        }
     }, {
         tableName: 'penulis',
-        timestamps: false,
+        timestamps: false
     });
 
     Penulis.associate = (models) => {
         Penulis.hasMany(models.Komik, {
             foreignKey: 'penulis_id',
-            as: 'komiks',
+            as: 'komik'
         });
     };
 
-    return Penulis;
+    return Penulis; // WAJIB ADA: Biar gak undefined
 };

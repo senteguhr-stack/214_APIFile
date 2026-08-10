@@ -5,12 +5,12 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true,
             primaryKey: true
         },
-        name: {
+        nama: {
             type: DataTypes.STRING,
             allowNull: false,
             unique: true
         },
-        description: {
+        deskripsi: {
             type: DataTypes.STRING,
             allowNull: true
         }
@@ -21,12 +21,12 @@ module.exports = (sequelize, DataTypes) => {
 
     Genre.associate = (models) => {
         Genre.belongsToMany(models.Komik, {
+            through: 'KomikGenre',
             foreignKey: 'genre_id',
-            through: 'komik_id',
-            as: 'komik',
+            otherKey: 'komik_id',
+            as: 'komik'
         });
-    }
+    };
+
     return Genre;
 };
-
-    

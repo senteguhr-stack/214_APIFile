@@ -1,77 +1,119 @@
-const db = require('../models');
+const db = require("../models");
 
-async function getAllGenre(req, res) {
-    try {
-        const genre = await db.Genre.findAll();
-        res.status(200).json(genre);
-    } catch (err) {
-        console.error('Error fetching genre:', err.message);
-        res.status(500).json({ error: 'Failed to fetch genre' });
-    }
+const Genre = db.Genre;
+
+async function getAll(req, res) {
+  try {
+    const genres = await Genre.findAll();
+
+    return res.status(200).json(genres);
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
 }
 
-async function getGenreById(req, res) {
+async function create(req, res) {
+  try {
+    const { nama, deskripsi } = req.body;
+
+    if (!nama) {
+      return res.status(400).json({
+        message: "Nama genre wajib diisi."
+      });
+    }
+
+    const existingGenre = await Genre.findOne({
+      where: { nama }
+    });
+
+    if (existingGenre) {
+      return res.status(400).json({
+        message: "Genre sudah ada."
+      });
+    }
+
+    const genre = await Genre.create({
+      nama,
+      deskripsi
+    });
+
+    return res.status(201).json({
+      message: "Genre berhasil ditambahkan.",
+      data: genre
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
+}
+
+async function update(req, res) {
+  try {
     const { id } = req.params;
-    try {
-        const genre = await db.Genre.findByPk(id);
-        if (!genre) {
-            return res.status(404).json({ error: 'Genre not found' });
-        }
-        res.status(200).json(genre);
-    } catch (err) {
-        console.error('Error fetching genre by ID:', err.message);
-        res.status(500).json({ error: 'Failed to fetch genre by ID' });
+    const { nama, deskripsi } = req.body;
+
+    const genre = await Genre.findByPk(id);
+
+    if (!genre) {
+      return res.status(404).json({
+        message: "Genre tidak ditemukan."
+      });
     }
+
+    await genre.update({
+      nama,
+      deskripsi
+    });
+
+    return res.status(200).json({
+      message: "Genre berhasil diperbarui.",
+      data: genre
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
 }
 
-async function createGenre(req, res) {
-    const { name, description } = req.body;
-    try {
-        const newGenre = await db.Genre.create({ name, description });
-        res.status(201).json(newGenre);
-    } catch (err) {
-        console.error('Error creating genre:', err.message);
-        res.status(500).json({ error: 'Failed to create genre' });
-    }
-}
-
-async function updateGenre(req, res) {
+async function remove(req, res) {
+  try {
     const { id } = req.params;
-    const { name, description } = req.body;
-    try {
-        const genre = await db.Genre.findByPk(id);
-        if (!genre) {
-            return res.status(404).json({ error: 'Genre not found' });
-        }
-        genre.name = name;
-        genre.description = description;
-        await genre.save();
-        res.status(200).json(genre);
-    } catch (err) {
-        console.error('Error updating genre:', err.message);
-        res.status(500).json({ error: 'Failed to update genre' });
-    }
-}
 
-async function deleteGenre(req, res) {
-    const { id } = req.params;
-    try {
-        const genre = await db.Genre.findByPk(id);
-        if (!genre) {
-            return res.status(404).json({ error: 'Genre not found' });
-        }
-        await genre.destroy();
-        res.status(200).json({ message: 'Genre deleted successfully' });
-    } catch (err) {
-        console.error('Error deleting genre:', err.message);
-        res.status(500).json({ error: 'Failed to delete genre' });
+    const genre = await Genre.findByPk(id);
+
+    if (!genre) {
+      return res.status(404).json({
+        message: "Genre tidak ditemukan."
+      });
     }
+
+    const komik = await genre.getKomik();
+
+    if (komik.length > 0) {
+      return res.status(400).json({
+        message: "Genre masih digunakan oleh komik dan tidak dapat dihapus."
+      });
+    }
+
+    await genre.destroy();
+
+    return res.status(200).json({
+      message: "Genre berhasil dihapus."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message
+    });
+  }
 }
 
 module.exports = {
-    getAllGenre,
-    getGenreById,
-    createGenre,
-    updateGenre,
-    deleteGenre
+  getAll,
+  create,
+  update,
+  remove
 };

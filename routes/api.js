@@ -1,30 +1,20 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const penulisController = require('../controller/penulisController');
+const komikController = require('../controller/komikController');
+const genreController = require('../controller/genreController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-const komikController = require("../controller/komikController");
-const genreController = require("../controller/genreController");
-const userController = require("../controller/userController");
-const authMiddleware = require("../middleware/authMiddleware");
+router.post("/register", penulisController.register);
+router.post("/login", penulisController.login);
 
-router.post("/register", userController.register);
-router.post("/login", userController.login);
+router.get("/genre", authMiddleware, genreController.getAll);
+router.post("/genre", authMiddleware, genreController.create);
+router.put("/genre/:id", authMiddleware, genreController.update);
+router.delete("/genre/:id", authMiddleware, genreController.remove);
 
-// Public - Komik
-router.get("/komik", komikController.getAllKomik);
-router.get("/komik/:id", komikController.getKomikById);
-
-// Protected - Komik
-router.post("/komik", authMiddleware, komikController.createKomik);
-router.put("/komik/:id", authMiddleware, komikController.updateKomik);
-router.delete("/komik/:id", authMiddleware, komikController.deleteKomik);
-
-// Public - Genre
-router.get("/genre", genreController.getAllGenre);
-router.get("/genre/:id", genreController.getGenreById);
-
-// Protected - Genre
-router.post("/genre", authMiddleware, genreController.createGenre);
-router.put("/genre/:id", authMiddleware, genreController.updateGenre);
-router.delete("/genre/:id", authMiddleware, genreController.deleteGenre);
-
+router.get("/komik", authMiddleware, komikController.getAll);
+router.post("/komik", authMiddleware, komikController.create);
+router.put("/komik/:id", authMiddleware, komikController.update);
+router.delete("/komik/:id", authMiddleware, komikController.remove);
 module.exports = router;
