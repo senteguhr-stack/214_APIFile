@@ -1,40 +1,26 @@
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const process = require('process');
-const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
-const db = {};
+const sequelize = require('../config/db');
+const { DataTypes } = require('sequelize');
 
-let sequelize;
-if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
-} else {
-  sequelize = new Sequelize(config.database, config.username, config.password, config);
-}
+// Import fungsi inisialisasi model
+const Komik = require('./komik')(sequelize, DataTypes);
+const Penulis = require('./penulis')(sequelize, DataTypes);
+const Genre = require('./genre')(sequelize, DataTypes);
 
-fs.readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename && // Jangan me-load index.js itu sendiri
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
-  .forEach(file => {
-    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-    db[model.name] = model; // Ini lokasi error kamu kalau ada model yang lupa `return`
-  });
+// ==========================================
+// DEFINISI RELASI / ASSOCIATIONS
+// ==========================================
 
-Object.keys(db).forEach(modelName => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+// Relasi Penulis & Komik (1 Penulis punya banyak Komik)
+Penulis.hasMany(Komik, { foreignKey: 'penulisId', as: 'komik' });
+Komik.belongsTo(Penulis, { foreignKey: 'penulisId', as: 'penulis' });
 
-db.sequelize = sequelize;
-db.Sequelize = Sequelize;
+// Relasi Genre & Komik (1 Genre punya banyak Komik)
+Genre.hasMany(Komik, { foreignKey: 'genreId', as: 'komik' });
+Komik.belongsTo(Genre, { foreignKey: 'genreId', as: 'genre' });
 
-module.exports = db;
+module.exports = {
+  sequelize,
+  Komik,
+  Penulis,
+  Genre
+};

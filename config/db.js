@@ -1,17 +1,16 @@
-const db = require('../models');
+const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-async function connectDatabase() {
-  try {
-    await db.sequelize.authenticate();
-    console.log('Database connection successfully.');
-
-    await db.sequelize.sync({ alter: true });
-    console.log('Database synchronized .');
-    
-  } catch (err) {
-    console.error('Database connection failed:', err.message);
-    process.exit(1);
+const sequelize = new Sequelize(
+  process.env.DB_DATABASE || 'perpustakaan',
+  process.env.DB_USER || 'postgres',
+  process.env.DB_PASS || 'nurainun',
+  {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: process.env.DB_PORT || 5432,
+    dialect: process.env.DB_DIALECT || 'postgres',
+    logging: false
   }
-}
+);
 
-module.exports = connectDatabase;
+module.exports = sequelize;

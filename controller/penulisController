@@ -6,6 +6,12 @@ const Penulis = db.Penulis;
 
 async function register(req, res) {
   try {
+    if (!req.body) {
+      return res.status(400).json({
+        message: "Payload request/body tidak boleh kosong."
+      });
+    }
+
     const { nama, email, password } = req.body;
 
     if (!nama || !email || !password) {
@@ -50,6 +56,12 @@ async function register(req, res) {
 
 async function login(req, res) {
   try {
+    if (!req.body) {
+      return res.status(400).json({
+        message: "Payload request/body tidak terbaca. Periksa format JSON di Postman."
+      });
+    }
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -80,15 +92,9 @@ async function login(req, res) {
     }
 
     const token = jwt.sign(
-      {
-        id: penulis.id,
-        nama: penulis.nama,
-        email: penulis.email
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES
-      }
+      { id: penulis.id, email: penulis.email },
+      process.env.JWT_SECRET || "secret_key_bebas",
+      { expiresIn: 86400 }
     );
 
     return res.status(200).json({

@@ -1,12 +1,12 @@
-const multer = require('multer');
-const path = require('path');
+const multer = require("multer");
+const path = require("path");
 
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+    destination: function (req, file, cb) {
+        cb(null, "uploads/");
     },
 
-    filename: (req,file,cb) => {
+    filename: function (req, file, cb) {
         const uniqueName = Date.now() + "-" + file.originalname;
         cb(null, uniqueName);
     }
@@ -15,24 +15,24 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png/;
 
-    const extname = allowedTypes.test
-    (path.extname(file.originalname).toLowerCase()
-);
+    const extname = allowedTypes.test(
+        path.extname(file.originalname).toLowerCase()
+    );
 
-const mimetype = allowedTypes.test(file.mimetype);
+    const mimetype = allowedTypes.test(file.mimetype);
 
-if (extname && mimetype) {
-    cb(null, true);
-} else {
-    cb(new Error("hanya file JPG,JPEG, dan PNG yang diizinkan"));
-}
+    if (extname && mimetype) {
+        cb(null, true);
+    } else {
+        cb(new Error("Hanya file JPG, JPEG, dan PNG yang diizinkan"));
+    }
 };
 
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        filesize: 2 * 1024 * 1024 
+        fileSize: 2 * 1024 * 1024
     }
 });
 
